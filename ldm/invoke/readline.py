@@ -101,7 +101,7 @@ class Completer(object):
         self.linebuffer  = None
         self.auto_history_active = True
         self.extensions = None
-        self.concepts = Concepts().list_concepts()
+        self.concepts = None
         return
 
     def complete(self, text, state):
@@ -271,7 +271,8 @@ class Completer(object):
 
     def add_embedding_terms(self, terms:list[str]):
         self.concepts = Concepts().list_concepts()
-        self.concepts.extend(terms)
+        if self.concepts:
+            self.concepts.extend(terms)
 
     def _concept_completions(self, text, state):
         partial = text[1:]  # this removes the leading '<'
@@ -416,7 +417,11 @@ def get_completer(opt:Args, models=[])->Completer:
         readline.parse_and_bind('set skip-completed-text on')
         readline.parse_and_bind('set show-all-if-ambiguous on')
 
-        histfile = os.path.join(os.path.expanduser(opt.outdir), '.invoke_history')
+        outdir = os.path.expanduser(opt.outdir)
+        if os.path.isabs(outdir):
+            histfile = os.path.join(outdir,'.invoke_history')
+        else:
+            histfile = os.path.join(Globals.root, outdir, '.invoke_history')
         try:
             readline.read_history_file(histfile)
             readline.set_history_length(1000)
